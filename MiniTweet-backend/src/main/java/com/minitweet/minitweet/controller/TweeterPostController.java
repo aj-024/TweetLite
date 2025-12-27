@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173", // for local dev
+        "https://tweetliteapp.vercel.app" // for Vercel frontend
+})
 @RequestMapping("/tweeter")
 @RestController
 @RequiredArgsConstructor
@@ -29,7 +32,7 @@ public class TweeterPostController {
     }
 
     @PostMapping("/addpost")
-    public ResponseEntity<TweeterPostDto>addTweeterPost(@Valid @RequestBody TweeterNewPostDto tweeterNewPostDto) {
+    public ResponseEntity<TweeterPostDto> addTweeterPost(@Valid @RequestBody TweeterNewPostDto tweeterNewPostDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tweeterPostService.addTweeterPost(tweeterNewPostDto));
     }
 
@@ -40,7 +43,8 @@ public class TweeterPostController {
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<TweeterPostDto> updateTweeterPost(@PathVariable Long postId, @RequestBody TweeterNewPostDto tweeterNewPostDto) {
+    public ResponseEntity<TweeterPostDto> updateTweeterPost(@PathVariable Long postId,
+            @RequestBody TweeterNewPostDto tweeterNewPostDto) {
         return ResponseEntity.ok(tweeterPostService.updateTweeterPost(postId, tweeterNewPostDto));
     }
 }

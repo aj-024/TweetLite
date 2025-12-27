@@ -9,7 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173", // for local dev
+        "https://tweetliteapp.vercel.app" // for Vercel frontend
+})
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -17,12 +20,12 @@ public class TweeterUserController {
     private final TweeterUserService tweeterUserService;
 
     @PostMapping("/signup")
-    public ResponseEntity<TweeterUserDto>signup(@RequestBody TweeterUserDto tweeterUserDto) {
+    public ResponseEntity<TweeterUserDto> signup(@RequestBody TweeterUserDto tweeterUserDto) {
         return ResponseEntity.ok(tweeterUserService.signup(tweeterUserDto));
     }
 
     @PostMapping("/login")
-    public ResponseEntity <TweeterUserDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<TweeterUserDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         try {
             TweeterUserDto userDto = tweeterUserService.login(
                     loginRequestDto.getUsername(), loginRequestDto.getPassword());
