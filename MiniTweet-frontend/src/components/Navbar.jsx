@@ -25,7 +25,7 @@ const Navbar = () => {
           <div className="bg-blue-500 text-white rounded-full p-2">
             <Feather size={20} />
           </div>
-          <h1 className="text-xl font-bold text-blue-600">Mini Twitter</h1>
+          <h1 className="text-xl font-bold text-blue-600">TweetLite</h1>
         </div>
 
         {/* RIGHT - Buttons */}
