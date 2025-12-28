@@ -3,6 +3,10 @@
 TweetLite is a lightweight Twitter clone built using **React + Redux Toolkit** on the frontend and **Spring Boot + PostgreSQL** on the backend.  
 A clean, modern, full-stack project with REST APIs, proper state management, and responsive UI.
 
+## 🔗 **Live Demo**
+### 🚀 **Frontend:** [Click Here to View App](https://tweetliteapp.vercel.app/)
+### ⚙️ **Backend API:** [Live Server (Render)](https://tweetlite-backend.onrender.com)
+
 ---
 
 ## 🚀 **Features**
