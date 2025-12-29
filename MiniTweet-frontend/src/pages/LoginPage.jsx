@@ -1,62 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { useDispatch } from "react-redux";
 import { login } from "../redux/slice/userSlice.js";
 import { loginUser } from "../api/api.js";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../components/Spinner"; // Import Spinner
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
-  const [error, setError] = useState(""); // State to store error messages
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // 1. Loading State
+  const [isServerSlow, setIsServerSlow] = useState(false); // 2. Slow Server State
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear error when user starts typing again
     if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Client-Side Validation (Prevents 400 Bad Request)
+
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters long.");
       return;
     }
 
     try {
+      setIsLoading(true); // Start loading
+      
+      // Start a timer: if it takes > 3 seconds, show "Waking up" message
+      const slowTimer = setTimeout(() => setIsServerSlow(true), 3000);
+
       const res = await loginUser(formData);
+      
+      clearTimeout(slowTimer); // Clear timer if it was fast
       console.log("✅ Login success:", res.data);
 
       dispatch(login(res.data));
       navigate("/");
     } catch (err) {
       console.error("❌ Login failed:", err);
-      
-      // 2. Display Backend Error Message if available
       if (err.response && err.response.data) {
-         // Sometimes Spring sends the message in 'message' or just the body string
-         setError(err.response.data.message || "Invalid username or password."); 
+        setError(err.response.data.message || "Invalid username or password.");
       } else {
-         setError("Something went wrong. Please try again.");
+        setError("Something went wrong. Please try again.");
       }
+    } finally {
+      setIsLoading(false); // Stop loading
+      setIsServerSlow(false); // Hide slow message
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen flex-col">
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-md rounded-lg p-6 w-80 space-y-4"
       >
         <h2 className="text-xl font-semibold text-center">Login</h2>
 
-        {/* Display Error Message at the top */}
+        {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative text-sm">
             {error}
           </div>
+        )}
+
+        {/* Slow Server Warning */}
+        {isServerSlow && isLoading && (
+           <div className="bg-blue-50 text-blue-600 text-xs px-3 py-2 rounded text-center animate-pulse">
+             Render server is waking up...<br/>This may take ~50 seconds.
+           </div>
         )}
 
         <input
@@ -66,7 +82,8 @@ const LoginPage = () => {
           placeholder="Username"
           value={formData.username}
           onChange={handleChange}
-          className="border p-2 w-full rounded"
+          disabled={isLoading} // Disable input while loading
+          className="border p-2 w-full rounded disabled:bg-gray-100"
         />
 
         <div>
@@ -76,37 +93,33 @@ const LoginPage = () => {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className={`border p-2 w-full rounded ${
-              formData.password.length > 0 && formData.password.length < 6 
-                ? "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500" 
+            disabled={isLoading}
+            className={`border p-2 w-full rounded disabled:bg-gray-100 ${
+              formData.password.length > 0 && formData.password.length < 6
+                ? "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 : ""
             }`}
           />
-          {/* Helper text for password length */}
-          <p className="text-xs text-gray-500 mt-1">
-             *Min 6 characters
-          </p>
+          <p className="text-xs text-gray-500 mt-1">*Min 6 characters</p>
         </div>
 
         <button
           type="submit"
-          // Disable button if password is too short (Visual feedback)
-          disabled={formData.password.length > 0 && formData.password.length < 6}
-          className={`w-full py-2 rounded text-white ${
-            formData.password.length > 0 && formData.password.length < 6
-              ? "bg-blue-300 cursor-not-allowed" // Lighter blue if disabled
+          disabled={isLoading || (formData.password.length > 0 && formData.password.length < 6)}
+          className={`w-full py-2 rounded text-white flex justify-center items-center ${
+            isLoading || (formData.password.length > 0 && formData.password.length < 6)
+              ? "bg-blue-300 cursor-not-allowed"
               : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
-          Login
+          {isLoading ? <Spinner /> : "Login"}
         </button>
 
-        {/* Signup link */}
         <p className="text-center text-sm text-gray-600 mt-2">
           Don't have an account?{" "}
           <span
-            className="text-blue-500 hover:underline cursor-pointer"
-            onClick={() => navigate("/signup")}
+            className={`text-blue-500 hover:underline cursor-pointer ${isLoading ? 'pointer-events-none text-blue-300' : ''}`}
+            onClick={() => !isLoading && navigate("/signup")}
           >
             Sign up
           </span>
