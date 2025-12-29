@@ -10,6 +10,9 @@ const TweetDetailsPage = () => {
 
   const [tweet, setTweet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isServerSlow, setIsServerSlow] = useState(false); // 1. Slow Server State
+
+  // Edit Mode States
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -17,15 +20,23 @@ const TweetDetailsPage = () => {
   useEffect(() => {
     const fetchTweet = async () => {
       try {
+        setLoading(true);
+        // 2. Timer: If data takes > 3 seconds, show "Waking up" message
+        const slowTimer = setTimeout(() => setIsServerSlow(true), 3000);
+
         const res = await getPostById(id);
         console.log("✅ Fetched tweet:", res.data);
+        
         setTweet(res.data);
         setTitle(res.data.title);
         setContent(res.data.content);
+        
+        clearTimeout(slowTimer); // Clear timer if fast
       } catch (err) {
         console.error("❌ Error fetching tweet:", err);
       } finally {
         setLoading(false);
+        setIsServerSlow(false);
       }
     };
 
@@ -37,8 +48,47 @@ const TweetDetailsPage = () => {
     return null;
   }
 
-  if (loading) return <p className="text-center mt-8">Loading tweet...</p>;
+  // 3. SKELETON LOADER (Specific to Details Page Layout)
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-white border border-gray-300 rounded-2xl shadow-sm">
+        
+        {/* Slow Server Warning */}
+        {isServerSlow && (
+           <div className="bg-blue-50 text-blue-600 text-sm px-4 py-2 mb-4 rounded-md text-center animate-pulse">
+             Render server is waking up... grabbing your tweet!
+           </div>
+        )}
+
+        <div className="animate-pulse">
+          {/* Header Skeleton */}
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+            <div className="flex flex-col space-y-2 mt-1">
+              <div className="h-4 w-32 bg-gray-200 rounded"></div>
+              <div className="h-3 w-20 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+
+          {/* Body Skeleton */}
+          <div className="ml-1 space-y-4">
+            {/* Title Line */}
+            <div className="h-8 w-3/4 bg-gray-200 rounded"></div>
+            {/* Content Paragraphs */}
+            <div className="space-y-2">
+              <div className="h-4 w-full bg-gray-200 rounded"></div>
+              <div className="h-4 w-full bg-gray-200 rounded"></div>
+              <div className="h-4 w-5/6 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!tweet) return <p className="text-center mt-8">Tweet not found.</p>;
+
+  // --- Normal Render Logic Below ---
 
   const isOwner = Number(userData.userId) === Number(tweet.userId);
   const formattedDate = new Date(tweet.createdAt).toLocaleString("en-IN", {
