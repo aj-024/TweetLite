@@ -4,6 +4,7 @@ import com.minitweet.minitweet.dto.TweeterNewPostDto;
 import com.minitweet.minitweet.dto.TweeterPostDto;
 import com.minitweet.minitweet.entity.TweeterPostEntity;
 import com.minitweet.minitweet.entity.TweeterUserEntity;
+import com.minitweet.minitweet.exception.ResourceNotFoundException; // ✅ Added Import
 import com.minitweet.minitweet.repository.TweeterPostRepository;
 import com.minitweet.minitweet.repository.TweeterUserRepository;
 import com.minitweet.minitweet.service.TweeterPostService;
@@ -31,10 +32,10 @@ public class TweeterPostServiceImpl implements TweeterPostService {
 
     @Override
     public TweeterPostDto addTweeterPost(TweeterNewPostDto tweeterNewPostDto) {
+        // ✅ Refactored: Throws 404 if User ID is invalid
         TweeterUserEntity user = tweeterUserRepository.findById(tweeterNewPostDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", tweeterNewPostDto.getUserId()));
 
-        // Manually set the user because ModelMapper cannot map userId (Long) to TweeterUserEntity automatically
         TweeterPostEntity postEntity = new TweeterPostEntity();
         postEntity.setTitle(tweeterNewPostDto.getTitle());
         postEntity.setContent(tweeterNewPostDto.getContent());
@@ -47,24 +48,26 @@ public class TweeterPostServiceImpl implements TweeterPostService {
 
     @Override
     public TweeterPostDto getTweeterPostById(Long id) {
+        // ✅ Refactored: Throws 404 if Post ID not found
         TweeterPostEntity tweeterPostEntity = tweeterPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", id));
         return modelMapper.map(tweeterPostEntity, TweeterPostDto.class);
     }
 
     @Override
     public void deleteTweeterPostById(Long postId) {
+        // ✅ Refactored
         TweeterPostEntity tweeterPostEntity = tweeterPostRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         tweeterPostRepository.deleteById(postId);
-
     }
 
     @Override
     public TweeterPostDto updateTweeterPost(Long postId, TweeterNewPostDto tweeterNewPostDto) {
-        TweeterPostEntity tweeterPostEntity   = tweeterPostRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+        // ✅ Refactored
+        TweeterPostEntity tweeterPostEntity = tweeterPostRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
 
         tweeterPostEntity.setTitle(tweeterNewPostDto.getTitle());
         tweeterPostEntity.setContent(tweeterNewPostDto.getContent());
@@ -72,6 +75,4 @@ public class TweeterPostServiceImpl implements TweeterPostService {
         TweeterPostEntity updatedPost = tweeterPostRepository.save(tweeterPostEntity);
         return modelMapper.map(updatedPost, TweeterPostDto.class);
     }
-
-
 }

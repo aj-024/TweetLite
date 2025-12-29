@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState } from "react"; 
 import { useDispatch } from "react-redux";
 import { login } from "../redux/slice/userSlice.js";
 import { loginUser } from "../api/api.js";
 import { useNavigate } from "react-router-dom";
-import Spinner from "../components/Spinner"; // Import Spinner
+import Spinner from "../components/Spinner"; 
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // 1. Loading State
-  const [isServerSlow, setIsServerSlow] = useState(false); // 2. Slow Server State
+  const [isLoading, setIsLoading] = useState(false); 
+  const [isServerSlow, setIsServerSlow] = useState(false); 
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,28 +28,26 @@ const LoginPage = () => {
     }
 
     try {
-      setIsLoading(true); // Start loading
-      
-      // Start a timer: if it takes > 3 seconds, show "Waking up" message
+      setIsLoading(true); 
       const slowTimer = setTimeout(() => setIsServerSlow(true), 3000);
 
       const res = await loginUser(formData);
       
-      clearTimeout(slowTimer); // Clear timer if it was fast
+      clearTimeout(slowTimer); 
       console.log("✅ Login success:", res.data);
 
       dispatch(login(res.data));
       navigate("/");
     } catch (err) {
       console.error("❌ Login failed:", err);
-      if (err.response && err.response.data) {
-        setError(err.response.data.message || "Invalid username or password.");
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      
+      // ✅ FIX IS HERE: Use err.message directly
+      // Our api.js interceptor already put the backend message here.
+      setError(err.message || "Something went wrong. Please try again.");
+      
     } finally {
-      setIsLoading(false); // Stop loading
-      setIsServerSlow(false); // Hide slow message
+      setIsLoading(false); 
+      setIsServerSlow(false); 
     }
   };
 
@@ -82,7 +80,7 @@ const LoginPage = () => {
           placeholder="Username"
           value={formData.username}
           onChange={handleChange}
-          disabled={isLoading} // Disable input while loading
+          disabled={isLoading} 
           className="border p-2 w-full rounded disabled:bg-gray-100"
         />
 

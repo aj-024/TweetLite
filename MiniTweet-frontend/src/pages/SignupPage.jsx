@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { login } from "../redux/slice/userSlice.js";
 import { signupUser } from "../api/api.js";
 import { useNavigate } from "react-router-dom";
-import Spinner from "../components/Spinner"; // Import Spinner
+import Spinner from "../components/Spinner"; 
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +14,7 @@ const SignupPage = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isServerSlow, setIsServerSlow] = useState(false);
-  const [error, setError] = useState(""); // Added nice error handling
+  const [error, setError] = useState(""); 
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,6 +26,13 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // ✅ 1. NEW: Validate Password Length immediately
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return; // Stop here, do not send to backend
+    }
+
     try {
       setIsLoading(true);
       const slowTimer = setTimeout(() => setIsServerSlow(true), 3000);
@@ -33,17 +40,16 @@ const SignupPage = () => {
       const res = await signupUser(formData);
       
       clearTimeout(slowTimer);
-      console.log("✅ Signup success:");
+      console.log("✅ Signup success");
 
       dispatch(login(res.data));
       navigate("/");
     } catch (err) {
       console.error("❌ Signup failed:", err);
-      // Improve error message handling
       if (err.response && err.response.data) {
-        setError(err.response.data.message || "Signup failed. Try again.");
+        setError(err.response.data.message);
       } else {
-        setError("Signup failed. Check your internet or try again.");
+        setError(err.message || "Signup failed. Try again.");
       }
     } finally {
       setIsLoading(false);
@@ -93,27 +99,40 @@ const SignupPage = () => {
           className="border p-2 w-full rounded disabled:bg-gray-100"
         />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          disabled={isLoading}
-          className="border p-2 w-full rounded disabled:bg-gray-100"
-        />
+        <div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              disabled={isLoading}
+              // ✅ 2. UI: Show red border if user types < 6 chars
+              className={`border p-2 w-full rounded disabled:bg-gray-100 ${
+                  formData.password.length > 0 && formData.password.length < 6 
+                  ? "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500" 
+                  : ""
+              }`}
+            />
+            {/* ✅ 3. UI: Helper Text */}
+            <p className="text-xs text-gray-500 mt-1 ml-1">
+                *Min 6 characters
+            </p>
+        </div>
 
         <button
           type="submit"
-          disabled={isLoading}
+          // ✅ 4. Disable button visually if password is short
+          disabled={isLoading || (formData.password.length > 0 && formData.password.length < 6)}
           className={`w-full py-2 rounded text-white flex justify-center items-center ${
-             isLoading ? "bg-green-300 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+             isLoading || (formData.password.length > 0 && formData.password.length < 6)
+             ? "bg-green-300 cursor-not-allowed" 
+             : "bg-green-500 hover:bg-green-600"
           }`}
         >
           {isLoading ? <Spinner /> : "Signup"}
         </button>
         
-        {/* Back to Login Link */}
         <p className="text-center text-sm text-gray-600 mt-2">
           Already have an account?{" "}
           <span

@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface TweeterUserRepository extends JpaRepository<TweeterUserEntity, Long> {
     Optional<TweeterUserEntity> findByUsername(String username);
-
+    Boolean existsByUsername(String username);
+    Boolean existsByEmail(String email);
 }
